@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Height Horizon — Predict when heights will align</title>
+  <meta name="description" content="A growth prediction tool that shows when a younger sibling will catch up in height to an older sibling or parent, using CDC growth chart data.">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300..700;1,9..40,300..700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js" defer></script>
+
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="./base.css">
+  <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+  <!-- Skip to content -->
+  <a href="#main" class="sr-only" style="position:absolute;top:0;left:0;z-index:1000;padding:1rem;background:var(--color-primary);color:var(--color-text-inverse);text-decoration:none;">Skip to content</a>
+
+  <!-- HEADER -->
+  <header class="site-header">
+    <div class="container container--wide">
+      <a href="#" class="site-brand" aria-label="Height Horizon home">
+        <!-- SVG Logo: stylized upward growth arrow with human figure -->
+        <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+          <!-- Human figure -->
+          <circle cx="24" cy="8" r="3" fill="var(--color-primary)"/>
+          <path d="M20.5 14.5C20.5 13.1 21.6 12 23 12h2c1.4 0 2.5 1.1 2.5 2.5V22h-2v10h-3V22h-2V14.5z" fill="var(--color-primary)" opacity="0.65"/>
+          <!-- Growth arrow -->
+          <path d="M5 30V10" stroke="var(--color-primary)" stroke-width="2.2" stroke-linecap="round"/>
+          <path d="M5 10l5-5" stroke="var(--color-primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+          <path d="M5 10l5 0" stroke="var(--color-primary)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" opacity="0.5"/>
+          <!-- Growth curve -->
+          <path d="M8 28C11 22 14 20 17 18" stroke="var(--color-primary)" stroke-width="1.8" stroke-linecap="round" fill="none" opacity="0.4"/>
+        </svg>
+        <span class="site-brand-name">Height Horizon</span>
+      </a>
+      <div class="header-actions">
+        <button data-theme-toggle aria-label="Switch to dark mode" class="btn-icon">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main id="main">
+
+    <!-- HERO -->
+    <section class="hero">
+      <div class="container">
+        <h1 class="hero-title">Predict when heights will align</h1>
+        <p class="hero-tagline">Add family members, enter their measurements, and see when the younger one catches up.</p>
+        <div class="hero-actions">
+          <button class="btn btn--primary" id="btnTryExample" type="button">Try an example</button>
+          <button class="btn btn--secondary" id="btnAddFirst" type="button">Start from scratch</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- INPUT SECTION -->
+    <section class="section" id="sectionInput">
+      <div class="container container--wide">
+        <h2 class="section-title">Add People</h2>
+        <p class="section-subtitle">Add two or more family members to compare growth trajectories.</p>
+        <div class="people-list" id="peopleList">
+          <!-- Person cards inserted by JS -->
+        </div>
+        <div class="add-person-area">
+          <button class="btn btn--secondary" id="btnAddPerson" type="button">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Person
+          </button>
+        </div>
+
+        <!-- Action bar -->
+        <div class="action-bar" id="actionBar" style="display:none;">
+          <button class="btn btn--primary btn--lg" id="btnPredict" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+            Predict Heights
+          </button>
+          <button class="btn btn--ghost" id="btnReset" type="button">Reset</button>
+        </div>
+      </div>
+    </section>
+
+    <!-- RESULTS SECTION -->
+    <section class="section results-section hidden" id="sectionResults">
+      <div class="container container--wide">
+
+        <!-- Growth Chart -->
+        <div class="card" style="margin-bottom: var(--space-8);">
+          <div class="card-header">
+            <h2 class="card-title">Growth Chart</h2>
+          </div>
+          <div class="chart-container">
+            <canvas id="growthChart"></canvas>
+          </div>
+        </div>
+
+        <!-- Percentile Summary -->
+        <div style="margin-bottom: var(--space-8);">
+          <h2 class="section-title">Percentile Summary</h2>
+          <div class="percentile-grid" id="percentileGrid">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+
+        <!-- Catch-up Timeline -->
+        <div style="margin-bottom: var(--space-8);">
+          <h2 class="section-title">Catch-up Timeline</h2>
+          <div class="results-grid" id="catchupGrid">
+            <!-- Filled by JS -->
+          </div>
+        </div>
+
+        <!-- Methodology -->
+        <details class="collapsible card" style="margin-top: var(--space-8);">
+          <summary>Methodology &amp; Limitations</summary>
+          <div class="collapsible-content">
+            <h4>CDC 2000 Growth Charts</h4>
+            <p>This tool uses the CDC 2000 Growth Charts, which are based on data from national health surveys in the United States. The charts describe the distribution of stature (height) by age and sex for children and adolescents aged 2–20 years.</p>
+
+            <h4>LMS Method</h4>
+            <p>The CDC charts use the LMS method (Lambda-Mu-Sigma), where three parameters describe the distribution of height at each age: L (Box-Cox power), M (median), and S (coefficient of variation). These allow us to convert any height measurement to a Z-score (standard deviation score), and vice versa.</p>
+
+            <h4>Growth Projection</h4>
+            <p>For each child, we calculate their height-for-age Z-score at each measurement point. The average Z-score represents their "growth channel." We then project forward along this channel to estimate height at future ages, up to age 20 (adult height).</p>
+
+            <h4>Mid-Parental Height</h4>
+            <p>When parents' heights are provided, we calculate the mid-parental target height:</p>
+            <p><code>Boys: (mother + father + 13 cm) / 2</code></p>
+            <p><code>Girls: (mother + father − 13 cm) / 2</code></p>
+            <p>The target range is ±8.5 cm (approximately 68% of children will fall within this range).</p>
+
+            <h4>Important Limitations</h4>
+            <p>These predictions are estimates only and should not replace professional medical advice. Growth is influenced by many factors including genetics, nutrition, health conditions, and puberty timing. The CDC data is based on US populations and may not perfectly apply to other populations. The assumption that a child will continue along the same growth percentile is a simplification — growth spurts and other factors can shift percentile rankings. Always consult a pediatrician for growth concerns.</p>
+          </div>
+        </details>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- FOOTER -->
+  <footer class="site-footer">
+    <div class="container">
+      <p>Height Horizon — Growth predictions based on <a href="https://www.cdc.gov/growthcharts/" target="_blank" rel="noopener noreferrer">CDC 2000 Growth Charts</a>. For informational purposes only. Not medical advice.</p>
+    </div>
+  </footer>
+
+  <script src="./cdc_data.js"></script>
+  <script src="./app.js"></script>
+  <script>
+    // Auto-load example if ?demo is in URL
+    if (window.location.search.includes('demo')) {
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          var btn = document.getElementById('btnTryExample');
+          if (btn) btn.click();
+          setTimeout(function() {
+            var pred = document.getElementById('btnPredict');
+            if (pred) pred.click();
+          }, 200);
+        }, 300);
+      });
+    }
+  </script>
+</body>
+</html>
